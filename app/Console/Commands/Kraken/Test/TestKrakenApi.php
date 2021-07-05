@@ -29,18 +29,37 @@ class TestKrakenApi extends Command
      */
     public function handle(ApiClient $krakenApiClient)
     {
-        $this->info("Testing getServerTime (public)");
+        $this->serverTime($krakenApiClient);
+
+
+        $this->info("Testing getAccountBalance (public)");
 
         try {
-            $serverTime = $krakenApiClient->getServerTime();
+            $accountBalance = $krakenApiClient->getAccountBalance();
+            $this->info(json_encode($accountBalance));
         } catch (KrakenApiException $exception) {
-            $this->warn('Failed to get kraken server time');
+            $this->warn('Failed to get account balance');
             $this->debug($exception->getMessage());
             return 1;
         }
 
-        $this->info('Kraken server time is ' . $serverTime->toString());
-
         return 0;
+    }
+
+    /**
+     * @param ApiClient $krakenApiClient
+     * @return KrakenApiException|\Exception
+     */
+    private function serverTime(ApiClient $krakenApiClient): void
+    {
+        $this->info("Testing getServerTime (public)");
+
+        try {
+            $serverTime = $krakenApiClient->getServerTime();
+            $this->info('Kraken server time is ' . $serverTime->toString());
+        } catch (KrakenApiException $exception) {
+            $this->warn('Failed to get kraken server time');
+            $this->debug($exception->getMessage());
+        }
     }
 }
