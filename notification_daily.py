@@ -116,7 +116,7 @@ def getTradesMessage():
 def sendDailyNotification(send=True):
     subject = 'Trading bot log {}'.format(datetime.today().strftime('%d-%m-%Y %H:%M:%S'))
     message = ""
-    message += "<p><b>De totale waarde van de portefeuille is %.2f</b></p>" % getBalanceInEur()
+    message += "<p><b>De totale waarde van de portefeuille is &euro; %.2f</b></p>" % getBalanceInEur()
 
     message += getTradesMessage()
 
