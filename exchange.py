@@ -13,7 +13,7 @@ def getAvailableMarkets(exchange):
     for market in markets:
         print(market)
 
-def fetchCandles(symbol: str, timeframe:int='15m', limit:int=30) -> pd.DataFrame:
+def fetchCandles(symbol: str, timeframe:int, limit:int=30) -> pd.DataFrame:
     candles = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
     
     return candlesToDataFrame(candles)

@@ -23,7 +23,7 @@ def bot_long_short_sma_crossing():
 
         candles = None
         try:
-            candles = exchange.fetchCandles(market['symbol'])
+            candles = exchange.fetchCandles(market['symbol'], timeframe='1h')
         except Exception as e:
             log(f"Got exception: {e}")
             continue
