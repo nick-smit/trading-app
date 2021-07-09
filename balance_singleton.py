@@ -16,6 +16,7 @@ class Balance():
 
         log("Fetching balance from API", False)
 
+        balance = None
         try:
             balance = _exchange.fetch_free_balance()
         except Exception as e:

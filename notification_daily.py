@@ -6,12 +6,22 @@ import config
 
 def getCurrentPrice(symbol, current_prices):
     if current_prices.get(symbol) == None:
-        current_prices[symbol] = _exchange.fetch_ticker(symbol)['bid']
+        try:
+            current_prices[symbol] = _exchange.fetch_ticker(symbol)['bid']
+        except Exception as e:
+            log("Got exception while trying to fetch ticker for {}: {}".format(symbol, e))
+            current_prices[symbol] = 0
     
     return current_prices[symbol]
 
 def getBalanceInEur(current_prices):
-    balance = _exchange.fetch_free_balance()
+    balance = None
+    try:
+        balance = _exchange.fetch_free_balance()
+    except Exception as e:
+        log("Got exception while trying to fetch free balance: {}".format(e))
+        return 0
+
     balance_in_eur = 0
 
     for symbol, value in balance.items():
@@ -47,7 +57,13 @@ def getTradesMessage(current_prices):
     completed_trades = []
     incomplete_trades = []
     for symbol in config.markets:
-        trades = _exchange.fetch_orders(symbol, since= one_day_ago * 1000)
+        trades = None
+        try:
+            trades = _exchange.fetch_orders(symbol, since= one_day_ago * 1000)
+        except Exception as e:
+            log("Got exception while trying to fetch orders for {}: {}".format(symbol, e))
+            continue
+
         i = 0
         while i < len(trades):
             if i+1 < len(trades):

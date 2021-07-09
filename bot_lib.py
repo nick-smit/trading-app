@@ -4,7 +4,7 @@ from exchange import exchange as _exchange
 from balance_singleton import balance as _balance
 
 def getMarkets():
-    log("Checking balance", False)
+    log("Initializing markets", False)
     balance = _exchange.fetch_balance()
 
     # Get the market information
@@ -37,7 +37,15 @@ def getMarkets():
 def buy(symbol: str, max_decimals: int):
     eurInBalance = _balance.RetrieveBalance()
     eurToRisk = eurInBalance * config.risk_percentage
-    price = _exchange.fetch_ticker(symbol)['bid']
+
+    price = None
+    try:
+        price = _exchange.fetch_ticker(symbol)['bid']
+    except Exception as e:
+        log("Got exception while fetching ticker for buy order {}: {}".format(symbol, e))
+        return False
+    
+    
     quantity = round(eurToRisk / price, max_decimals)
 
     order = None
@@ -51,7 +59,13 @@ def buy(symbol: str, max_decimals: int):
     return True
 
 def sell(symbol: str):
-    balance = _exchange.fetch_balance()
+    balance = None
+    try:
+        balance = _exchange.fetch_balance()
+    except Exception as e:
+        log("Got exception while fetching balance to sell {}: {}".format(symbol, e))
+        return False
+
     currency = symbol.split('/')[0]
     quantity = balance['free'][currency]
 
