@@ -75,8 +75,8 @@ def getTradesMessage():
         message += "<tr>"
         message += "<td>{}</td>".format(trade['symbol'])
         message += "<td>{}</td>".format(trade['amount'])
-        message += "<td>{}</td>".format(trade['price'])
-        message += "<td>{}</td>".format(price)
+        message += "<td>{}</td>".format(round(trade['price'], 5))
+        message += "<td>{}</td>".format(round(price, 5))
         message += f"<td style=\"color: {color};\">{wlpercent}%</td>"
         message += "<td>{}</td>".format(dt)
         message += "</tr>"
@@ -127,4 +127,4 @@ def sendDailyNotification(send=True):
         log("\n{}".format(message), False)
 
 if __name__ == '__main__':
-    sendDailyNotification(False)
+    sendDailyNotification()
