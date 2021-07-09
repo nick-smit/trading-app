@@ -1,4 +1,3 @@
-from requests.utils import dict_to_sequence
 from notification_lib import sendMail
 from helpers import log, isDaylightSavingTime
 from datetime import datetime

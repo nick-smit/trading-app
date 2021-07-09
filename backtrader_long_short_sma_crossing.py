@@ -2,7 +2,6 @@ import pandas as pd
 import config
 import strategy_long_short_sma_crossing
 import backtrader as bt
-from datetime import datetime
 
 tf_in_minutes = 60
 
