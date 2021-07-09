@@ -3,7 +3,7 @@ from helpers import log
 from exchange import exchange as _exchange
 
 def getMarkets():
-    log("Checking balance")
+    log("Checking balance", False)
     balance = _exchange.fetch_balance()
 
     # Get the market information
