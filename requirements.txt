@@ -1,0 +1,6 @@
+TA-lib
+schedule
+ccxt
+pandas
+numpy
+backtrader

@@ -1,15 +1,8 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-
+config.py
 .env
-.phpunit.result.cache
 
-docker-compose.override.yml
-
-npm-debug.log
-yarn-error.log
+*.log
 
 /.idea
+/__pycache__
+/backtrading_data_*/
