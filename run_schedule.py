@@ -4,7 +4,7 @@ from notification_daily import sendDailyNotification
 import schedule
 import time
 
-schedule.every(1).minute.do(bot_long_short_sma_crossing)
+schedule.every(1).minute.at(':00').do(bot_long_short_sma_crossing)
 # schedule.every().day.at('12:00').do(sendDailyNotification)
 # schedule.every().day.at('08:00').do(sendDailyNotification)
 # schedule.every().day.at('18:00').do(sendDailyNotification)
