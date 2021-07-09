@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import exchange
-from log import log
+from helpers import log
 
 def calculateNextFromDate(from_date, tf_in_minutes):
     return int(from_date + (60000 * tf_in_minutes))

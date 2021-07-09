@@ -1,6 +1,6 @@
 from requests.utils import dict_to_sequence
 from notification_lib import sendMail
-from log import log, isDaylightSavingTime
+from helpers import log, isDaylightSavingTime
 from datetime import datetime
 from exchange import exchange as _exchange
 import config

@@ -1,6 +1,6 @@
 import pandas as pd
 import exchange
-from log import log
+from helpers import log
 import strategy_long_short_sma_crossing
 from bot_lib import *
 

@@ -1,5 +1,5 @@
 import config
-from log import log
+from helpers import log
 from exchange import exchange as _exchange
 
 def getMarkets():

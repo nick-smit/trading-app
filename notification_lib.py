@@ -1,6 +1,6 @@
 import smtplib, ssl
 import config
-from log import log
+from helpers import log
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -22,7 +22,7 @@ def sendMail(subject, message, html=False):
             msg.attach(MIMEText(message, 'html'))
             body = msg.as_string()
 
-        log("Sending email to {}".format(config.notification_email_to), True)
+        log("Sending email to {}".format(config.notification_email_to))
         server.sendmail(config.notification_email_from, config.notification_email_to, body)
         server.quit()
 
