@@ -4,14 +4,13 @@ from datetime import datetime
 from exchange import exchange as _exchange
 import config
 
-current_prices = dict()
-def getCurrentPrice(symbol):
+def getCurrentPrice(symbol, current_prices):
     if current_prices.get(symbol) == None:
         current_prices[symbol] = _exchange.fetch_ticker(symbol)['bid']
     
     return current_prices[symbol]
 
-def getBalanceInEur():
+def getBalanceInEur(current_prices):
     balance = _exchange.fetch_free_balance()
     balance_in_eur = 0
 
@@ -22,7 +21,7 @@ def getBalanceInEur():
         if symbol == 'EUR':
             balance_in_eur += value
         else:
-            balance_in_eur += getCurrentPrice("{}/EUR".format(symbol)) * value
+            balance_in_eur += getCurrentPrice("{}/EUR".format(symbol), current_prices) * value
 
     
     return balance_in_eur
@@ -33,7 +32,7 @@ def dateToString(dt_unix):
     return datetime.fromtimestamp(int(dt_unix)).strftime('%d-%m-%Y %H:%M:%S')
 
 
-def getTradesMessage():
+def getTradesMessage(current_prices):
     message = ""
 
     now = int(datetime.now().timestamp());
@@ -64,7 +63,7 @@ def getTradesMessage():
     message += "<tr><th>Symbol</th><th>Aantal</th><th>Aankoop prijs</th><th>Huidige prijs</th><th>W/L%</th><th>Datum</th></tr>"
 
     for trade in incomplete_trades:
-        price = getCurrentPrice(trade['symbol'])
+        price = getCurrentPrice(trade['symbol'], current_prices)
         wlpercent = round((price / trade['price'] * 100) - 100, 2)
         color = 'green'
         if wlpercent < 0:
@@ -114,11 +113,13 @@ def getTradesMessage():
     return message
 
 def sendDailyNotification(send=True):
+    current_prices = dict()
+
     subject = 'Trading bot log {}'.format(datetime.today().strftime('%d-%m-%Y %H:%M:%S'))
     message = ""
-    message += "<p><b>De totale waarde van de portefeuille is &euro; %.2f</b></p>" % getBalanceInEur()
+    message += "<p><b>De totale waarde van de portefeuille is &euro; %.2f</b></p>" % getBalanceInEur(current_prices)
 
-    message += getTradesMessage()
+    message += getTradesMessage(current_prices)
 
     if send:
         sendMail(subject, message, html=True)
