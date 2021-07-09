@@ -1,6 +1,7 @@
 import config
 from helpers import log
 from exchange import exchange as _exchange
+from balance_singleton import balance as _balance
 
 def getMarkets():
     log("Checking balance", False)
@@ -34,12 +35,9 @@ def getMarkets():
     return markets
 
 def buy(symbol: str, max_decimals: int):
-    balance = _exchange.fetch_balance()
-    eurInBalance = balance['free']['EUR']
-
-    price = _exchange.fetch_ticker(symbol)['bid']
-
+    eurInBalance = _balance.RetrieveBalance()
     eurToRisk = eurInBalance * config.risk_percentage
+    price = _exchange.fetch_ticker(symbol)['bid']
     quantity = round(eurToRisk / price, max_decimals)
 
     order = None
