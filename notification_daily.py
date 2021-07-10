@@ -64,7 +64,6 @@ def getTradesMessage(current_prices):
             log("Got exception while trying to fetch orders for {}: {}".format(symbol, e))
             continue
 
-        print(trades)
         i = 0
         while i < len(trades):
             if trades[i]['side'] == 'sell':
