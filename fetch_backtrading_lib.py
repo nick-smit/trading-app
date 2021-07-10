@@ -30,7 +30,15 @@ def fetchSymbolData(symbol, tf_in_minutes, from_date):
     while(from_date < now):
         log("Fetching data for {} from {}".format(symbol, from_date), False)
 
-        data = exchange.exchange.fetch_ohlcv(symbol, '15m', params={'startTime': from_date})
+        tf = None
+        if tf_in_minutes < 60:
+            tf = str(tf_in_minutes) + 'm'
+        elif tf_in_minutes == 60:
+            tf = '1h'
+        elif tf_in_minutes == 1440:
+            tf = '1d'
+
+        data = exchange.exchange.fetch_ohlcv(symbol, tf, params={'startTime': from_date})
 
         df = exchange.candlesToDataFrame(data)
         if len(df.index) == 0:
@@ -50,3 +58,13 @@ def fetchAllBacktradingData(markets, tf_in_minutes, from_date='2020-01-01'):
     log("Fetching backtrading data", False)
     for symbol in markets:
         fetchSymbolData(symbol, tf_in_minutes, from_date)
+
+def getSymbls():
+    markets = exchange.getAvailableMarkets()
+    
+    symbols = []
+    for market in markets:
+        if market.split('/')[1] == 'EUR':
+            symbols.append(market)
+    
+    return symbols

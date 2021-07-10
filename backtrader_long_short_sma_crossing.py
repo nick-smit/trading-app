@@ -1,7 +1,9 @@
+from datetime import datetime
 import pandas as pd
 import config
 import strategy_long_short_sma_crossing
 import backtrader as bt
+import exchange
 
 tf_in_minutes = 60
 
@@ -19,11 +21,11 @@ def dataProvider(symbol) -> pd.DataFrame:
 
     return df
 
-class SupertrendStrategy(bt.Strategy):
+class Strat(bt.Strategy):
     def log(self, txt, dt=None):
         ''' Logging function for this strategy'''
-        #dt = dt or self.datas[0].datetime.date(0)
-        #print('%s, %s' % (dt.isoformat(), txt))
+        # dt = dt or self.datas[0].datetime.date(0)
+        # print('%s, %s' % (dt.strftime('%d-%m-%Y %H:%M'), txt))
         pass
 
     def __init__(self):
@@ -41,9 +43,10 @@ class SupertrendStrategy(bt.Strategy):
                 self.log(f"BUY EXECUTED, Price: {order.price}")
                 self.last_buy_order = order
             else:
-                self.log(f"SELL EXECUTED, Price: {order.price}")
+                profit = abs(order.size) * order.price - self.last_buy_order.size * self.last_buy_order.price
+                self.log(f"SELL EXECUTED, Price: {order.price}, Profit: {round(profit, 2)}")
                 self.trades.append(
-                    abs(order.size) * order.price - self.last_buy_order.size * self.last_buy_order.price
+                    profit
                 )
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -56,9 +59,11 @@ class SupertrendStrategy(bt.Strategy):
 
     def stop(self):
         profitable_trades = [trade for trade in self.trades if trade > 0]
-        print(profitable_trades[0])
+
         success_rate = len(profitable_trades) / len(self.trades)
         print(f"Made {len(self.trades)} trades, with a total sum of {sum(self.trades)}, success rate: {success_rate}")
+        print(f"Best trade: {max(self.trades)}")
+        print(f"Worst trade: {min(self.trades)}")
 
     def next(self):
         self.idx += 1
@@ -84,7 +89,17 @@ class SupertrendStrategy(bt.Strategy):
 
 
 if __name__ == '__main__':
-    for symbol in config.markets:
+    markets = exchange.getAvailableMarkets()
+    
+    symbols = []
+    for market in markets:
+        if market.split('/')[1] == 'EUR':
+            symbols.append(market)
+
+
+    results = pd.DataFrame(columns=['symbol', 'result value'])
+    
+    for symbol in symbols:
         df = dataProvider(symbol)
 
         cerebro = bt.Cerebro()
@@ -92,7 +107,7 @@ if __name__ == '__main__':
         data = bt.feeds.PandasData(dataname=df, open='open', high='high', low='low', close='close', volume='volume', datetime='datetime', openinterest=None)
         cerebro.adddata(data)
 
-        cerebro.addstrategy(SupertrendStrategy)
+        cerebro.addstrategy(Strat)
         cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
 
         cerebro.broker.set_cash(100000)
@@ -105,3 +120,7 @@ if __name__ == '__main__':
 
         # Print out the final result
         print(f"Result {symbol} portfolio value: {cerebro.broker.getvalue()}")
+        results.loc[len(results)] = [symbol, round(cerebro.broker.getvalue(), 2)]
+
+    print(results)
+    results.to_csv('backtrading_results/' + __file__ + datetime.now().timestamp() + '.csv')

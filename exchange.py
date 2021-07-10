@@ -7,11 +7,10 @@ exchange = ccxt.binance({
     'secret': config.binance_api_secret,
 })
 
-def getAvailableMarkets(exchange):
+def getAvailableMarkets():
     markets = exchange.load_markets()
 
-    for market in markets:
-        print(market)
+    return markets
 
 def fetchCandles(symbol: str, timeframe:int, limit:int=30) -> pd.DataFrame:
     candles = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
