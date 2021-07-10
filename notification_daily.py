@@ -64,8 +64,14 @@ def getTradesMessage(current_prices):
             log("Got exception while trying to fetch orders for {}: {}".format(symbol, e))
             continue
 
+        print(trades)
         i = 0
         while i < len(trades):
+            if trades[i]['side'] == 'sell':
+                # we only want trading pairs, or buying trades
+                i += 1
+                continue
+
             if i+1 < len(trades):
                 completed_trades.append([trades[i], trades[i+1]])
                 i += 1
@@ -76,7 +82,7 @@ def getTradesMessage(current_prices):
 
     message += "<h3>Open trades:</h3>"
     message += "<table>"
-    message += "<tr><th>Symbol</th><th>Aantal</th><th>Aankoop prijs</th><th>Huidige prijs</th><th>W/L%</th><th>Datum</th></tr>"
+    message += "<tr><th>Symbol</th><th>Aantal</th><th>Aankoop Datum</th><th>Aankoop prijs</th><th>Huidige prijs</th><th>W/L%</th></tr>"
 
     for trade in incomplete_trades:
         price = getCurrentPrice(trade['symbol'], current_prices)
@@ -90,10 +96,10 @@ def getTradesMessage(current_prices):
         message += "<tr>"
         message += "<td>{}</td>".format(trade['symbol'])
         message += "<td>{}</td>".format(trade['amount'])
+        message += "<td>{}</td>".format(dt)
         message += "<td>{}</td>".format(round(trade['price'], 5))
         message += "<td>{}</td>".format(round(price, 5))
         message += f"<td style=\"color: {color};\">{wlpercent}%</td>"
-        message += "<td>{}</td>".format(dt)
         message += "</tr>"
 
     message += "</table>"
@@ -144,4 +150,4 @@ def sendDailyNotification(send=True):
         log("\n{}".format(message), False)
 
 if __name__ == '__main__':
-    sendDailyNotification()
+    sendDailyNotification(True)
