@@ -4,6 +4,7 @@ import config
 import strategy_long_short_sma_crossing
 import backtrader as bt
 import exchange
+from os import path, mkdir
 
 tf_in_minutes = 60
 
@@ -123,4 +124,10 @@ if __name__ == '__main__':
         results.loc[len(results)] = [symbol, round(cerebro.broker.getvalue(), 2)]
 
     print(results)
-    results.to_csv('backtrading_results/' + __file__ + datetime.now().timestamp() + '.csv')
+
+    dirname = './backtrading_results/'
+    filename = f"{path.splitext(path.basename(__file__))[0]}_{str(int(datetime.now().timestamp()))}.csv"
+    if not path.isdir(dirname):
+        mkdir(dirname)
+
+    results.to_csv(dirname + filename)
