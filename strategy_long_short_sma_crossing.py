@@ -8,8 +8,9 @@ def calculate(df: pd.DataFrame, long_sma_period:int=20, short_sma_period:int=5) 
 
 def make_decision(in_position, df):
     current = len(df.index) - 1
+    previous = current - 1
 
-    if not in_position and df['sma_short'][current] > df['sma_long'][current]:
+    if not in_position and df['sma_short'][current] > df['sma_long'][current] and df['sma_short'][previous] < df['sma_long'][previous]:
         return 'buy'
     elif in_position and df['sma_short'][current] < df['sma_long'][current]:
         return 'sell'
