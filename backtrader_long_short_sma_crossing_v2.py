@@ -1,22 +1,21 @@
-from datetime import datetime
 import pandas as pd
-import config
 import strategy_long_short_sma_crossing
 import backtrader as bt
-import exchange
-from os import path, mkdir
-import backtrader_lib
+from backtrader_lib import *
 
 tf_in_minutes = 60
 
-class Strat(backtrader_lib.BaseStrat):
-    def next(self):
-        df = self.getDataframe(50)
-        if df.empty:
-            return
+class Strat(BaseStrat):
+    params=(
+        ('short_sma', 5),
+        ('long_sma', 20),
+    )
 
+    def next(self):
+        df = self.getDataframe(self.params.long_sma + 1)
+        
         in_position = bool(self.position)
-        df = strategy_long_short_sma_crossing.calculate(df)
+        df = strategy_long_short_sma_crossing.calculate(df, self.params.long_sma, self.params.short_sma)
         
         decision = strategy_long_short_sma_crossing.make_decision(in_position, df)
         
@@ -27,19 +26,19 @@ class Strat(backtrader_lib.BaseStrat):
 
 
 if __name__ == '__main__':
-    symbols = backtrader_lib.getSymbols()
+    symbols = getSymbols()
 
     results = pd.DataFrame(columns=['symbol', 'result value'])
     
     for symbol in symbols:
-        df = backtrader_lib.dataProvider(symbol, tf_in_minutes)
+        df = dataProvider(symbol, tf_in_minutes)
 
         cerebro = bt.Cerebro()
 
         data = bt.feeds.PandasData(dataname=df, open='open', high='high', low='low', close='close', volume='volume', datetime='datetime', openinterest=None)
         cerebro.adddata(data)
 
-        cerebro.addstrategy(Strat)
+        cerebro.addstrategy(Strat, short_sma=7, long_sma=21)
         cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
 
         cerebro.broker.set_cash(100000)
@@ -55,4 +54,4 @@ if __name__ == '__main__':
         results.loc[len(results)] = [symbol, round(cerebro.broker.getvalue(), 2)]
 
     print(results)
-    backtrader_lib.saveResults(results)
+    saveResults(results, __file__)
