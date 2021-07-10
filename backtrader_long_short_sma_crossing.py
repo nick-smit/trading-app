@@ -1,10 +1,6 @@
-from datetime import datetime
 import pandas as pd
-import config
 import strategy_long_short_sma_crossing
 import backtrader as bt
-import exchange
-from os import path, mkdir
 import backtrader_lib
 
 tf_in_minutes = 60
@@ -55,4 +51,4 @@ if __name__ == '__main__':
         results.loc[len(results)] = [symbol, round(cerebro.broker.getvalue(), 2)]
 
     print(results)
-    backtrader_lib.saveResults(results)
+    backtrader_lib.saveResults(results, __file__)
