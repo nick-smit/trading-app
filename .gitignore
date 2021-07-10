@@ -6,3 +6,6 @@ config.py
 /.idea
 /__pycache__
 /backtrading_data_*/
+/backtrading_results/
+
+.DS_Store
