@@ -1,4 +1,3 @@
-TA-lib
 schedule
 ccxt
 pandas
@@ -6,3 +5,5 @@ numpy
 backtrader
 pytz
 plotly
+pandas-ta
+pretty_html_table
