@@ -1,5 +1,5 @@
 import pandas as pd
-import strategy_long_short_sma_crossing
+import strategy_long_short_sma_crossing_v2
 import backtrader as bt
 from backtrader_lib import *
 
@@ -12,12 +12,14 @@ class Strat(BaseStrat):
     )
 
     def next(self):
-        df = self.getDataframe(self.params.long_sma + 1)
+        df = self.getDataframe(self.params.long_sma + 2)
+        if df.empty:
+            return
         
         in_position = bool(self.position)
-        df = strategy_long_short_sma_crossing.calculate(df, self.params.long_sma, self.params.short_sma)
+        df = strategy_long_short_sma_crossing_v2.calculate(df, self.params.long_sma, self.params.short_sma)
         
-        decision = strategy_long_short_sma_crossing.make_decision(in_position, df)
+        decision = strategy_long_short_sma_crossing_v2.make_decision(in_position, df)
         
         if decision == 'buy':
             self.buy(price=self.data.close[0])
