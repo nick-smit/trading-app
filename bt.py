@@ -159,6 +159,7 @@ wallet = Wallet(500)
 strategy = Strat()
 
 print("Creating dataprovider")
+# todo reproduce OnTick functionality
 dataprovider = Dataprovider(strategy.GetCandleTimeframe().GetInMinutes())
 print("Dataprovider created")
 
