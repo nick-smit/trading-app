@@ -1,4 +1,3 @@
-from os import system
 from typing import Optional
 import pandas as pd
 from enum import Enum

@@ -1,4 +1,5 @@
 from datetime import datetime
+from exchange import getAvailableMarkets
 from operator import concat, pos
 from strategy_lib import Position, Side
 from numpy import NaN, concatenate, nan
@@ -19,10 +20,13 @@ class Dataprovider():
         dir = f"./backtrading_data_{tf_in_minutes}"
         only_files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]
 
+        bar = Bar('Loading data', max=len(only_files) * 3)
+
         self.symbolDict = {}
         for file in only_files:
             symbol = splitext(basename(file))[0]
             self.symbolDict[symbol] = pd.read_csv(file)
+            bar.next()
         
         earliest_data = None
         latest_data = 0
@@ -33,6 +37,8 @@ class Dataprovider():
             latest = self.symbolDict[s]['timestamp'][len(self.symbolDict[s].index) - 1]
             if latest > latest_data:
                 latest_data = latest
+
+            bar.next()
             
         tf_in_milliseconds = tf_in_minutes * 60000
         for s in self.symbolDict:
@@ -54,7 +60,9 @@ class Dataprovider():
                     dt = datetime.fromtimestamp(int(latest / 1000))
                     append_data.append([latest,NaN,NaN,NaN,NaN,NaN,str(dt)])
 
+            self.len = len(self.symbolDict[s].index)
             if len(prepend_data) == 0 and len(append_data) == 0:
+                bar.next()
                 continue
 
             data = self.symbolDict[s].to_numpy()
@@ -74,6 +82,8 @@ class Dataprovider():
             self.symbolDict[s] = self.symbolDict[s].set_index('datetime_idx').reindex(r, method='pad').reset_index()
 
             self.len = len(self.symbolDict[s].index)
+            bar.next()
+        bar.finish()
             
 
     def retrieveData(self, symbol: str, iteration: int, length: int) -> pd.DataFrame:
@@ -192,12 +202,14 @@ for i in range(dataprovider.len):
             quantity = round(eurToRisk / price, 5)
             if wallet.buy(s, quantity, price).status == 'Success':
                 positions[s] = Position(s, status = True, quantity=quantity, open_price=price, stoploss=receipt.stoploss, take_profit=receipt.take_profit)
+            else:
+                print("Failed to take position")
         
         elif receipt.side == Side.SELL:
             price = latest_candle['close']
             if wallet.close(s, price).status == 'Success':
                 profit = round((latest_candle['close'] - positions[s].open_price) * positions[s].quantity, 2)
-                # print(f"Closed position {s}: {profit}")
+
                 trades.append(profit)
                 positions[s] = Position(s)
             else:
