@@ -12,13 +12,16 @@ def getAvailableMarkets():
 
     return markets
 
-def fetchCandles(symbol: str, timeframe:int, limit:int=30) -> pd.DataFrame:
+def fetchCandles(symbol: str, timeframe:int, limit:int=30, dropIncomplete:bool=True) -> pd.DataFrame:
     candles = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
     
-    return candlesToDataFrame(candles)
+    return candlesToDataFrame(candles, dropIncomplete)
 
-def candlesToDataFrame(candles) -> pd.DataFrame:
-    df = pd.DataFrame(candles[:-1], columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+def candlesToDataFrame(candles, dropIncomplete:bool = True) -> pd.DataFrame:
+    if dropIncomplete:
+        candles = candles[:-1]
+
+    df = pd.DataFrame(candles, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
 
     return df
