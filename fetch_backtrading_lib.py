@@ -33,10 +33,14 @@ def fetchSymbolData(symbol, tf_in_minutes, from_date):
         tf = None
         if tf_in_minutes < 60:
             tf = str(tf_in_minutes) + 'm'
-        elif tf_in_minutes == 60:
-            tf = '1h'
-        elif tf_in_minutes == 1440:
-            tf = '1d'
+        elif tf_in_minutes >= 60 and tf_in_minutes < 60 * 24:
+            tf = str(int(tf_in_minutes / 60)) + 'h'
+        elif tf_in_minutes >= 60*24 and tf_in_minutes < 60 * 24 * 7:
+            tf = str(int(tf_in_minutes / (60*24))) + 'd'
+        elif tf_in_minutes >= 60 * 24 * 7 and tf_in_minutes < 60 * 24 * 8:
+            tf = '1w'
+        else:
+            tf = '1M'
 
         data = exchange.exchange.fetch_ohlcv(symbol, tf, params={'startTime': from_date})
 
