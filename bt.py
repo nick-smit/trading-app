@@ -1,16 +1,18 @@
 from datetime import datetime
 from operator import concat, pos
-from warnings import catch_warnings
-from numpy import NaN, concatenate
+from strategy_lib import Position, Side
+from numpy import NaN, concatenate, nan
 import pandas as pd
 from os import listdir
 from sys import argv
 from os.path import isfile, join, basename, splitext
 import config
+from progress.bar import Bar
 
 # todo setup argv
 tf_in_minutes = 60
-import strategy_long_short_sma_crossing as strategy
+from strategy_macd_100_ema import MACD100EmaStrat as Strat
+# from strategy_long_short_sma_crossing import LongShortSMACrossing as Strat
 
 class Dataprovider():
     def __init__(self, tf_in_minutes):
@@ -78,15 +80,6 @@ class Dataprovider():
         symbol = symbol.replace('/', '')
         return self.symbolDict[symbol].iloc[iteration:iteration+length].reset_index()
 
-
-dataprovider = Dataprovider(60)
-
-class Position():
-    def __init__(self, symbol, quantity, open_price):
-        self.symbol = symbol
-        self.quantity = quantity
-        self.open_price = open_price
-
 class Order():
     def __init__(self, status: str):
         self.status = status
@@ -108,6 +101,7 @@ class Wallet():
             return Order('Not enough funds')
 
         fee = quantity * 0.001
+        # fee = 0
 
         if not currency_to_buy in self.balance:
             self.balance[currency_to_buy] = 0
@@ -129,6 +123,7 @@ class Wallet():
         returns = quantity * price
 
         fee = returns * 0.001
+        # fee = 0
 
         if not currency_to_buy in self.balance:
             self.balance[currency_to_buy] = 0
@@ -152,51 +147,67 @@ class Wallet():
         return tuple(symbol.split('/'))
 
 
-
-
 markets = config.markets
 risk_percentage = config.risk_percentage
 
 positions = {}
 for symbol in markets:
-    positions[symbol] = None
+    positions[symbol] = Position(symbol)
 
 wallet = Wallet(500)
+
+strategy = Strat()
+
+print("Creating dataprovider")
+dataprovider = Dataprovider(strategy.GetCandleTimeframe().GetInMinutes())
+print("Dataprovider created")
+
+bar = Bar('Processing', max=dataprovider.len)
 
 trades = []
 for i in range(dataprovider.len):
     for s in markets:
-        candles = dataprovider.retrieveData(s, i, 30)
-        if candles.empty:
+        candles = dataprovider.retrieveData(s, i, strategy.GetMinCandles())
+        if candles.empty or candles.iloc[0]['open'] == 'nan' or candles.iloc[-1]['open'] == 'nan' or len(candles) < strategy.GetMinCandles():
             continue
 
         latest_candle = candles.iloc[-1].copy()
 
-        df = strategy.calculate(candles)
-        decision = strategy.make_decision(positions[s], df)
-        if decision == 'buy' and positions[s] == None:
+        try:
+            receipt = strategy.OnCandleClose(candles, positions[s])
+        except Exception as e:
+            print(e)
+            print(candles)
+            raise e
+        
+        if receipt == None:
+            continue
+
+        if receipt.side == Side.BUY:
             balanceInEur = wallet.getBalance('EUR')
             eurToRisk = balanceInEur * risk_percentage
             price = latest_candle['close']
 
             quantity = round(eurToRisk / price, 5)
             if wallet.buy(s, quantity, price).status == 'Success':
-                positions[s] = Position(s, quantity, price)
-        elif decision == 'sell' and positions[s] != None:
+                positions[s] = Position(s, status = True, quantity=quantity, open_price=price, stoploss=receipt.stoploss, take_profit=receipt.take_profit)
+        
+        elif receipt.side == Side.SELL:
             price = latest_candle['close']
             if wallet.close(s, price).status == 'Success':
                 profit = round((latest_candle['close'] - positions[s].open_price) * positions[s].quantity, 2)
-                print(f"Closed position {s}: {profit}")
+                # print(f"Closed position {s}: {profit}")
                 trades.append(profit)
-                positions[s] = None
+                positions[s] = Position(s)
             else:
                 print("Failed to close position")
 
+    bar.next()
+bar.finish()
+print(f"Took {bar.elapsed_td}")
 print(f"Wallet at end: {wallet.getBalance('EUR')}")
 print(f"Total trades: {len(trades)}")
-print(f"Best trade: {max(trades)}")
-print(f"Worst trade: {min(trades)}")
-print(f"Sum trade: {sum(trades)}")
 
-profitable_trades = [trade for trade in trades if trade > 0]
-print(f"Successful trades: {len(profitable_trades) / len(trades)}")
+if len(trades) > 0:
+    profitable_trades = [trade for trade in trades if trade > 0]
+    print(f"Success rate: {len(profitable_trades) / len(trades)}")
