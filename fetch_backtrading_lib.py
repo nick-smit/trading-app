@@ -42,7 +42,7 @@ def fetchSymbolData(symbol, tf_in_minutes, from_date):
         else:
             tf = '1M'
 
-        data = exchange.exchange.fetch_ohlcv(symbol, tf, params={'startTime': from_date})
+        data = exchange.exchange.fetch_ohlcv(symbol, tf, params={'startTime': from_date}, limit=1000)
 
         df = exchange.candlesToDataFrame(data)
         if len(df.index) == 0:

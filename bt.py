@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 from exchange import getAvailableMarkets
 from operator import concat, pos
 from strategy_lib import Position, Side
@@ -12,14 +13,29 @@ from progress.bar import Bar
 
 # todo setup argv
 tf_in_minutes = 60
+# from strategy_random_ema import RandomEmaStrat as Strat
 from strategy_macd_100_ema import MACD100EmaStrat as Strat
 # from strategy_long_short_sma_crossing import LongShortSMACrossing as Strat
+
+debug = '--debug' in argv
+
+markets = config.markets
+
+class SlowBar(Bar):
+    fill = '*'
+    suffix = '%(remaining_mins)d minutes remaining'
+    @property
+    def remaining_mins(self):
+        return self.eta // 60
 
 class Dataprovider():
     def __init__(self, tf_in_minutes):
         dir = f"./backtrading_data_{tf_in_minutes}"
-        only_files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]
+        files_to_load = []
+        for m in markets:
+            files_to_load.append(m.replace('/', '') + '.csv')
 
+        only_files = [join(dir, f) for f in listdir(dir) if (isfile(join(dir, f)) and f in files_to_load)]
         bar = Bar('Loading data', max=len(only_files) * 3)
 
         self.symbolDict = {}
@@ -103,7 +119,6 @@ class Wallet():
         (currency_to_buy, currency_to_pay_with) = self._splitSymbol(symbol)
 
         cost = quantity * price
-
         if not currency_to_pay_with in self.balance:
             self.balance[currency_to_pay_with] = 0
 
@@ -157,7 +172,6 @@ class Wallet():
         return tuple(symbol.split('/'))
 
 
-markets = config.markets
 risk_percentage = config.risk_percentage
 
 positions = {}
@@ -173,7 +187,7 @@ print("Creating dataprovider")
 dataprovider = Dataprovider(strategy.GetCandleTimeframe().GetInMinutes())
 print("Dataprovider created")
 
-bar = Bar('Processing', max=dataprovider.len)
+bar = SlowBar('Processing', max=dataprovider.len)
 
 trades = []
 for i in range(dataprovider.len):
@@ -202,6 +216,7 @@ for i in range(dataprovider.len):
             quantity = round(eurToRisk / price, 5)
             if wallet.buy(s, quantity, price).status == 'Success':
                 positions[s] = Position(s, status = True, quantity=quantity, open_price=price, stoploss=receipt.stoploss, take_profit=receipt.take_profit)
+                if debug: print(receipt)
             else:
                 print("Failed to take position")
         
@@ -209,6 +224,7 @@ for i in range(dataprovider.len):
             price = latest_candle['close']
             if wallet.close(s, price).status == 'Success':
                 profit = round((latest_candle['close'] - positions[s].open_price) * positions[s].quantity, 2)
+                if debug: print(f"Profit:      {profit}")
 
                 trades.append(profit)
                 positions[s] = Position(s)
@@ -218,7 +234,12 @@ for i in range(dataprovider.len):
     bar.next()
 bar.finish()
 print(f"Took {bar.elapsed_td}")
-print(f"Wallet at end: {wallet.getBalance('EUR')}")
+print(f"Wallet at end: ")
+print(f"EUR: {wallet.getBalance('EUR')}")
+for m in markets:
+    m = m.split('/')[0]
+    print(f"{m}: {wallet.getBalance(m)}")
+
 print(f"Total trades: {len(trades)}")
 
 if len(trades) > 0:

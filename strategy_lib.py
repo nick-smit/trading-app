@@ -31,6 +31,9 @@ class Position():
             return self.stoploss
         
         return None
+    
+    def SetStoploss(self, stoploss: float):
+        self.stoploss = stoploss
 
     def GetTakeProfit(self) -> Optional[float]:
         if self.InPosition():
@@ -123,3 +126,9 @@ class BaseStrat():
 
     def OnTick(self, candle: dict, position: Position) -> Optional[Receipt]:
         return None
+
+    def HitStoploss(self, price: float, stoploss: float) -> bool:
+        return price < stoploss
+
+    def HitTakeProfit(self, price: float, take_profit: float) -> bool:
+        return price > take_profit

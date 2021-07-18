@@ -20,7 +20,6 @@ class MACD100EmaStrat(BaseStrat):
 
         last = df.iloc[-1]
         penultimate = df.iloc[-2]
-        
         # todo implement resistance / support detection
 
         if not position.InPosition() and last[ema_key] < last['close']:
@@ -49,11 +48,17 @@ class MACD100EmaStrat(BaseStrat):
 #BACKTESTING RESULTS:
 
 # timeframe: 1h
-# Processing |################################| 13357/13357
-# Took 0:01:44
-# Wallet at end: 1089.9482016708396
-# Total trades: 324
-# Success rate: 0.5370370370370371
+# Processing |********************************| 0 minutes remaining
+# Took 0:02:12
+# Wallet at end: 
+# EUR: 1119.8779377958317
+# ETH: 0.0
+# BTC: 0.0
+# BNB: 0.0
+# DOGE: 0.0
+# XRP: 0.0
+# Total trades: 407
+# Success rate: 0.515970515970516
 
 if __name__ == '__main__':
     import exchange
